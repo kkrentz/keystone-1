@@ -4,14 +4,15 @@
 //------------------------------------------------------------------------------
 #pragma once
 
+#include "coap3/coap_internal.h"
 #include <string>
 
 typedef unsigned char byte;
 
 #define ATTEST_DATA_MAXLEN 1024
-#define MDSIZE 64
-#define SIGNATURE_SIZE 64
-#define PUBLIC_KEY_SIZE 32
+#define MDSIZE (SHA_256_DIGEST_LENGTH)
+#define SIGNATURE_SIZE (ECC_CURVE_P_256_SIZE * 2)
+#define PUBLIC_KEY_SIZE (ECC_CURVE_P_256_SIZE * 2)
 
 class PublicKey {
  public:

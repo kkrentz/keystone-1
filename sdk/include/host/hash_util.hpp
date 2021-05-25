@@ -5,10 +5,10 @@
 #pragma once
 
 extern "C" {
-#include "common/sha3.h"
+#include "coap3/coap_internal.h"
 }
 
-typedef sha3_ctx_t hash_ctx_t;
+typedef sha_256_context_t hash_ctx_t;
 
 void
 hash_init(hash_ctx_t* hash_ctx);

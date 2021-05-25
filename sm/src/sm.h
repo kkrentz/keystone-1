@@ -6,6 +6,7 @@
 #define sm_h
 
 #include <sbi/sbi_types.h>
+#include "crypto.h"
 #include "pmp.h"
 #include "sm-sbi.h"
 #include <sbi/riscv_encoding.h>
@@ -18,7 +19,7 @@ void sm_init(bool cold_boot);
 /* platform specific functions */
 #define ATTESTATION_KEY_LENGTH  64
 void sm_retrieve_pubkey(void* dest);
-void sm_sign(void* sign, const void* data, size_t len);
+int sm_sign(void* signature, byte digest[MDSIZE]);
 int sm_derive_sealing_key(unsigned char *key,
                           const unsigned char *key_ident,
                           size_t key_ident_size,

@@ -57,9 +57,20 @@ static int osm_init(void)
   return region;
 }
 
-void sm_sign(void* signature, const void* data, size_t len)
+static int rng(uint8_t *dest, unsigned size)
 {
-  sign(signature, data, len, sm_public_key, sm_private_key);
+  for (unsigned i = 0; i < size; i++) {
+    dest[i] = sbi_sm_random();
+  }
+  return 1;
+}
+
+int sm_sign(void* signature, byte digest[MDSIZE])
+{
+  if (!uECC_sign(sm_private_key, digest, MDSIZE, signature, uECC_CURVE())) {
+    return -1;
+  }
+  return 0;
 }
 
 int sm_derive_sealing_key(unsigned char *key, const unsigned char *key_ident,
@@ -165,6 +176,11 @@ void sm_init(bool cold_boot)
   if (platform_init_global() != SBI_ERR_SM_ENCLAVE_SUCCESS) {
     sbi_printf("[SM] platform global init fatal error");
     sbi_hart_hang();
+  }
+
+  if (cold_boot) {
+    uECC_set_rng(rng);
+    sbi_printf("[SM] cold boot initialization done\n");
   }
 
   sbi_printf("[SM] Keystone security monitor has been initialized!\n");

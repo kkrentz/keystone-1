@@ -1,10 +1,10 @@
-#include <sha3/sha3.h>
+#include "coap3/coap_internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #define FW_MEMORY_SIZE  0x1ff000
-#define HASH_SIZE       64
+#define HASH_SIZE       SHA_256_DIGEST_LENGTH
 
 int main(int argc, char* argv[])
 {
@@ -41,10 +41,7 @@ int main(int argc, char* argv[])
 
   fclose(fw);
 
-  sha3_ctx_t hash_ctx;
-  sha3_init(&hash_ctx, HASH_SIZE);
-  sha3_update(&hash_ctx, buf, FW_MEMORY_SIZE);
-  sha3_final(sm_hash, &hash_ctx);
+  SHA_256.hash(buf, FW_MEMORY_SIZE, sm_hash);
 
   printf("unsigned char sm_expected_hash[] = {");
 

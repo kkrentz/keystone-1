@@ -7,7 +7,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 extern "C" {
-#include "common/sha3.h"
 #include "shared/keystone_user.h"
 }
 #include "ElfFile.hpp"

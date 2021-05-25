@@ -636,11 +636,18 @@ unsigned long attest_enclave(uintptr_t report_ptr, uintptr_t data, uintptr_t siz
   sbi_memcpy(report.sm.public_key, sm_public_key, PUBLIC_KEY_SIZE);
   sbi_memcpy(report.sm.signature, sm_signature, SIGNATURE_SIZE);
   sbi_memcpy(report.enclave.hash, enclaves[eid].hash, MDSIZE);
-  sm_sign(report.enclave.signature,
-      &report.enclave,
-      sizeof(struct enclave_report)
-      - SIGNATURE_SIZE
-      - ATTEST_DATA_MAXLEN + size);
+
+  {
+    byte digest[MDSIZE];
+    hash_ctx ctx;
+    hash_init(&ctx);
+    hash_extend(&ctx, report.enclave.hash, MDSIZE);
+    hash_extend(&ctx, report.enclave.data, report.enclave.data_len);
+    hash_finalize(digest, &ctx);
+    if (sm_sign(report.enclave.signature, digest)) {
+      return SBI_ERR_SM_ENCLAVE_UNKNOWN_ERROR;
+    }
+  }
 
   spin_lock(&encl_lock);
 
@@ -675,8 +682,16 @@ unsigned long get_sealing_key(uintptr_t sealing_key, uintptr_t key_ident,
     return SBI_ERR_SM_ENCLAVE_UNKNOWN_ERROR;
 
   /* sign derived key */
-  sm_sign((void *)key_struct->signature, (void *)key_struct->key,
-          SEALING_KEY_SIZE);
+  {
+    unsigned char digest[MDSIZE];
+    hash_ctx ctx;
+    hash_init(&ctx);
+    hash_extend(&ctx, key_struct->key, SEALING_KEY_SIZE);
+    hash_finalize(digest, &ctx);
+    ret = sm_sign(key_struct->signature, digest);
+  }
+  if (ret)
+    return SBI_ERR_SM_ENCLAVE_UNKNOWN_ERROR;
 
   return SBI_ERR_SM_ENCLAVE_SUCCESS;
 }

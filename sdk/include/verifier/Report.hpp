@@ -7,8 +7,6 @@
 #include <iostream>
 #include <string>
 #include "Keys.hpp"
-#include "common/sha3.h"
-#include "ed25519/ed25519.h"
 #include "verifier/json11.h"
 
 struct enclave_report_t {

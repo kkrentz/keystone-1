@@ -24,14 +24,8 @@ file(GLOB_RECURSE
 file(GLOB
   HOST_LIB_INCLUDE
   ../include/host)
-file(GLOB_RECURSE
-  COMMON_SOURCES
-  ../src/common/*)
-file(GLOB
-  COMMON_INCLUDE
-  ../include/common)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include ${HOST_LIB_INCLUDE} ${COMMON_INCLUDE})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../include ${HOST_LIB_INCLUDE})
 add_executable(TestKeystone
   ${SOURCES}
   ${HOST_LIB_SOURCES} ${COMMON_SOURCES})

@@ -17,9 +17,6 @@
 #include <iostream>
 
 #include "./common.h"
-extern "C" {
-#include "common/sha3.h"
-}
 #include "ElfFile.hpp"
 #include "Error.hpp"
 #include "KeystoneDevice.hpp"

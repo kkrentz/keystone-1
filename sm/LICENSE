@@ -4,12 +4,8 @@ The Keystone security monitor as a whole is released under BSD 3-Clause License
 However, it contains some parts that are compatible with the BSD 3-Clause.
 The following clarifies the license of the distribution:
 
-1) Every source file in ed25519/ directory is under zlib License
-(SPDX Identifier: Zlib)
+1) Every source file in the libcoap/ directory is under BSD 2-Clause
 
-2) Every source file in sha512/ directory is under MIT License
-(SPDX Identifier: MIT)
-
-3) Everything else is under BSD 3-Clause
+2) Everything else is under BSD 3-Clause
 
 Keystone Team

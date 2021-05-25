@@ -8,7 +8,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "ed25519/ed25519.h"
+#include "coap3/coap_internal.h"
+#include "uECC.h"
 
 using json11::Json;
 std::string
@@ -149,17 +150,20 @@ int
 Report::checkSignaturesOnly(const byte* dev_public_key) {
   int sm_valid      = 0;
   int enclave_valid = 0;
+  uint8_t scratchpad[MDSIZE + ATTEST_DATA_MAXLEN];
+  uint8_t md[MDSIZE];
 
   /* verify SM report */
-  sm_valid = ed25519_verify(
-      report.sm.signature, reinterpret_cast<byte*>(&report.sm),
-      MDSIZE + PUBLIC_KEY_SIZE, dev_public_key);
+  memcpy(scratchpad, report.sm.hash, MDSIZE);
+  memcpy(scratchpad + MDSIZE, report.sm.public_key, PUBLIC_KEY_SIZE);
+  SHA_256.hash(scratchpad, MDSIZE + PUBLIC_KEY_SIZE, md);
+  sm_valid = uECC_verify(dev_public_key, md, MDSIZE, report.sm.signature, uECC_CURVE());
 
   /* verify Enclave report */
-  enclave_valid = ed25519_verify(
-      report.enclave.signature, reinterpret_cast<byte*>(&report.enclave),
-      MDSIZE + sizeof(uint64_t) + report.enclave.data_len,
-      report.sm.public_key);
+  memcpy(scratchpad, report.enclave.hash, MDSIZE);
+  memcpy(scratchpad + MDSIZE, report.enclave.data, report.enclave.data_len);
+  SHA_256.hash(scratchpad, MDSIZE + report.enclave.data_len, md);
+  enclave_valid = uECC_verify(report.sm.public_key, md, MDSIZE, report.enclave.signature, uECC_CURVE());
 
   return sm_valid && enclave_valid;
 }

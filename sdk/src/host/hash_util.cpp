@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE for license details.
 //------------------------------------------------------------------------------
 extern "C" {
-#include "common/sha3.h"
+#include "coap3/coap_internal.h"
 }
 #include "Memory.hpp"
 #include "hash_util.hpp"
@@ -12,20 +12,20 @@ extern "C" {
 
 void
 hash_init(hash_ctx_t* hash_ctx) {
-  sha3_init(hash_ctx, MDSIZE);
+  SHA_256.init(hash_ctx);
 }
 
 void
 hash_extend(hash_ctx_t* hash_ctx, const void* ptr, size_t len) {
-  sha3_update(hash_ctx, ptr, len);
+  SHA_256.update(hash_ctx, (const uint8_t *)ptr, len);
 }
 
 void
 hash_extend_page(hash_ctx_t* hash_ctx, const void* ptr) {
-  sha3_update(hash_ctx, ptr, RISCV_PGSIZE);
+  SHA_256.update(hash_ctx, (const uint8_t *)ptr, RISCV_PGSIZE);
 }
 
 void
 hash_finalize(void* md, hash_ctx_t* hash_ctx) {
-  sha3_final(md, hash_ctx);
+  SHA_256.finalize(hash_ctx, (uint8_t *)md);
 }

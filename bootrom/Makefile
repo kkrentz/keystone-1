@@ -5,6 +5,14 @@
 # (i.e. we want nostdlib, nostartfiles, etc).
 
 override CFLAGS := \
+	-DKEYSTONE_BOOTLOADER=1 \
+	-DuECC_ENABLE_VLI_API=1 \
+	-DuECC_CURVE=uECC_secp256r1 \
+	-DuECC_SUPPORTS_secp160r1=0 \
+	-DuECC_SUPPORTS_secp192r1=0 \
+	-DuECC_SUPPORTS_secp224r1=0 \
+	-DuECC_SUPPORTS_secp256r1=1 \
+	-DuECC_SUPPORTS_secp256k1=0 \
 	-mcmodel=medany \
 	-nostdlib -nostartfiles -fno-common -std=gnu11 \
 	-static \
@@ -28,11 +36,19 @@ clean:
 bootrom_sources = \
 	./bootloader.S \
 	./bootloader.c \
-	./ed25519/*.c \
-	./sha3/*.c
+	${KEYSTONE_SM}/src/libcoap/src/oscore-ng/oscore_ng_sha_256.c \
+	${KEYSTONE_SM}/src/libcoap/ext/micro-ecc/uECC.c \
+	string.c
 
 %.elf: $(bootrom_sources) bootloader.lds
-	$(CC) $(CFLAGS) -I./ -L . -T bootloader.lds -o $@ $(bootrom_sources)
+	$(CC) \
+		$(CFLAGS) \
+		-I./ \
+		-I${KEYSTONE_SM}/src/libcoap/ext/micro-ecc \
+		-I${KEYSTONE_SM}/src/ \
+		-L . \
+		-T bootloader.lds \
+		-o $@ $(bootrom_sources)
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary --only-section=.text $< $@;

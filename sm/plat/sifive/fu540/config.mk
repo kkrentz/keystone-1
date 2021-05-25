@@ -9,7 +9,16 @@
 
 # Compiler flags
 platform-cppflags-y =
-platform-cflags-y = -I../src
+platform-cflags-y = -I../src \
+                    -I../src/libcoap/ext/micro-ecc
+platform-cflags-y += -DKEYSTONE_SM=1 \
+                     -DuECC_CURVE=uECC_secp256r1 \
+                     -DuECC_ENABLE_VLI_API=1 \
+                     -DuECC_SUPPORTS_secp160r1=0 \
+                     -DuECC_SUPPORTS_secp192r1=0 \
+                     -DuECC_SUPPORTS_secp224r1=0 \
+                     -DuECC_SUPPORTS_secp256r1=1 \
+                     -DuECC_SUPPORTS_secp256k1=0
 platform-asflags-y =
 platform-ldflags-y =
 

@@ -88,14 +88,8 @@ set_target_properties(test_pmp
 add_executable(test_enclave
 	test_enclave.c
 	${SM_SRC}/platform/generic/platform.c
-	${SM_SRC}/sha3/sha3.c
-	${SM_SRC}/ed25519/ge.c
-	${SM_SRC}/ed25519/fe.c
-	${SM_SRC}/ed25519/sc.c
-	${SM_SRC}/ed25519/sign.c
-	${SM_SRC}/ed25519/keypair.c
-	${SM_SRC}/hkdf_sha3_512/hkdf_sha3_512.c
-	${SM_SRC}/hmac_sha3/hmac_sha3.c
+	${SM_SRC}/libcoap/ext/micro-ecc/uECC.c
+	${SM_SRC}/libcoap/src/oscore-ng/oscore_ng_sha_256.c
 	${SM_SRC}/pmp.c
 	${SM_SRC}/attest.c
 	${SM_SRC}/cpu.c
