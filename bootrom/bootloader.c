@@ -55,10 +55,12 @@ void bootloader() {
   {
     sha_256_context_t hash_ctx;
     uint8_t digest[SHA_256_DIGEST_LENGTH];
+    uint8_t sanctum_sm_public_key_compressed[1 + ECC_CURVE_P_256_SIZE];
 
     SHA_256.init(&hash_ctx);
     SHA_256.update(&hash_ctx, sanctum_sm_hash, sizeof(sanctum_sm_hash));
-    SHA_256.update(&hash_ctx, sanctum_sm_public_key, sizeof(sanctum_sm_public_key));
+    uECC_compress(sanctum_sm_public_key, sanctum_sm_public_key_compressed, uECC_CURVE());
+    SHA_256.update(&hash_ctx, sanctum_sm_public_key_compressed, sizeof(sanctum_sm_public_key_compressed));
     SHA_256.finalize(&hash_ctx, digest);
     // Sign (H_SM, PK_SM) with SK_D
     if (!uECC_sign(sanctum_dev_secret_key, digest, sizeof(digest), sanctum_sm_signature, uECC_CURVE())) {

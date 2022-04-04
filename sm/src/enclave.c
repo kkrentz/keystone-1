@@ -633,7 +633,7 @@ unsigned long attest_enclave(uintptr_t report_ptr, uintptr_t data, uintptr_t siz
 
   sbi_memcpy(report.dev_public_key, dev_public_key, PUBLIC_KEY_SIZE);
   sbi_memcpy(report.sm.hash, sm_hash, MDSIZE);
-  sbi_memcpy(report.sm.public_key, sm_public_key, PUBLIC_KEY_SIZE);
+  uECC_compress(sm_public_key, report.sm.public_key, uECC_CURVE());
   sbi_memcpy(report.sm.signature, sm_signature, SIGNATURE_SIZE);
   sbi_memcpy(report.enclave.hash, enclaves[eid].hash, MDSIZE);
 

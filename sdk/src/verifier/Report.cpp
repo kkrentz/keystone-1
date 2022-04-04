@@ -48,7 +48,7 @@ Report::fromJson(std::string jsonstr) {
   std::string sm_hash = json["security_monitor"]["hash"].string_value();
   HexToBytes(report.sm.hash, MDSIZE, sm_hash);
   std::string sm_pubkey = json["security_monitor"]["pubkey"].string_value();
-  HexToBytes(report.sm.public_key, PUBLIC_KEY_SIZE, sm_pubkey);
+  HexToBytes(report.sm.public_key, PUBLIC_KEY_COMPRESSED_SIZE, sm_pubkey);
   std::string sm_signature =
       json["security_monitor"]["signature"].string_value();
   HexToBytes(report.sm.signature, SIGNATURE_SIZE, sm_signature);
@@ -78,7 +78,7 @@ Report::stringfy() {
           "security_monitor",
           Json::object{
               {"hash", BytesToHex(report.sm.hash, MDSIZE)},
-              {"pubkey", BytesToHex(report.sm.public_key, PUBLIC_KEY_SIZE)},
+              {"pubkey", BytesToHex(report.sm.public_key, PUBLIC_KEY_COMPRESSED_SIZE)},
               {"signature", BytesToHex(report.sm.signature, SIGNATURE_SIZE)}},
       },
       {
@@ -106,7 +106,7 @@ void
 Report::printPretty() {
   std::cout << "\t\t=== Security Monitor ===" << std::endl;
   std::cout << "Hash: " << BytesToHex(report.sm.hash, MDSIZE) << std::endl;
-  std::cout << "Pubkey: " << BytesToHex(report.sm.public_key, PUBLIC_KEY_SIZE)
+  std::cout << "Pubkey: " << BytesToHex(report.sm.public_key, PUBLIC_KEY_COMPRESSED_SIZE)
             << std::endl;
   std::cout << "Signature: " << BytesToHex(report.sm.signature, SIGNATURE_SIZE)
             << std::endl;
@@ -152,18 +152,20 @@ Report::checkSignaturesOnly(const byte* dev_public_key) {
   int enclave_valid = 0;
   uint8_t scratchpad[MDSIZE + ATTEST_DATA_MAXLEN];
   uint8_t md[MDSIZE];
+  uint8_t sm_public_key[PUBLIC_KEY_SIZE];
 
   /* verify SM report */
   memcpy(scratchpad, report.sm.hash, MDSIZE);
-  memcpy(scratchpad + MDSIZE, report.sm.public_key, PUBLIC_KEY_SIZE);
-  SHA_256.hash(scratchpad, MDSIZE + PUBLIC_KEY_SIZE, md);
+  memcpy(scratchpad + MDSIZE, report.sm.public_key, PUBLIC_KEY_COMPRESSED_SIZE);
+  SHA_256.hash(scratchpad, MDSIZE + PUBLIC_KEY_COMPRESSED_SIZE, md);
   sm_valid = uECC_verify(dev_public_key, md, MDSIZE, report.sm.signature, uECC_CURVE());
 
   /* verify Enclave report */
+  uECC_decompress(report.sm.public_key, sm_public_key, uECC_CURVE());
   memcpy(scratchpad, report.enclave.hash, MDSIZE);
   memcpy(scratchpad + MDSIZE, report.enclave.data, report.enclave.data_len);
   SHA_256.hash(scratchpad, MDSIZE + report.enclave.data_len, md);
-  enclave_valid = uECC_verify(report.sm.public_key, md, MDSIZE, report.enclave.signature, uECC_CURVE());
+  enclave_valid = uECC_verify(sm_public_key, md, MDSIZE, report.enclave.signature, uECC_CURVE());
 
   return sm_valid && enclave_valid;
 }

@@ -13,6 +13,7 @@ typedef unsigned char byte;
 #define MDSIZE (SHA_256_DIGEST_LENGTH)
 #define SIGNATURE_SIZE (ECC_CURVE_P_256_SIZE * 2)
 #define PUBLIC_KEY_SIZE (ECC_CURVE_P_256_SIZE * 2)
+#define PUBLIC_KEY_COMPRESSED_SIZE (1 + ECC_CURVE_P_256_SIZE)
 
 class PublicKey {
  public:
