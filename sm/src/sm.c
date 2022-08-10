@@ -65,6 +65,98 @@ static int rng(uint8_t *dest, unsigned size)
   return 1;
 }
 
+#if WITH_TRAP
+int sm_fhmqv(struct enclave_report *enclave_report)
+{
+  const uint8_t *peers_static_public_key;
+  uint8_t peers_ephemeral_public_key[PUBLIC_KEY_SIZE];
+  uint8_t our_ephemeral_public_key[PUBLIC_KEY_SIZE];
+  uint8_t our_ephemeral_private_key[PRIVATE_KEY_SIZE];
+  hash_ctx ctx;
+  uint8_t de[MDSIZE];
+  uint8_t sigma[MDSIZE];
+  uint8_t ikm[4 * PUBLIC_KEY_SIZE];
+  uint8_t okm[2 * MDSIZE];
+  sha_256_hmac_context_t hmac_ctx;
+
+  if (enclave_report->data_len
+      != (PUBLIC_KEY_SIZE + PUBLIC_KEY_COMPRESSED_SIZE)) {
+    return -1;
+  }
+  peers_static_public_key = enclave_report->data;
+  uECC_decompress(enclave_report->data + PUBLIC_KEY_SIZE,
+                  peers_ephemeral_public_key,
+                  uECC_CURVE());
+  if (!uECC_make_key(our_ephemeral_public_key,
+                     our_ephemeral_private_key,
+                     uECC_CURVE())) {
+    return -1;
+  }
+  uECC_compress(our_ephemeral_public_key,
+                enclave_report->ephemeral_public_key_compressed,
+                uECC_CURVE());
+
+  hash_init(&ctx);
+  hash_extend(&ctx,
+              peers_ephemeral_public_key,
+              sizeof(peers_ephemeral_public_key));
+  hash_extend(&ctx,
+              our_ephemeral_public_key,
+              sizeof(our_ephemeral_public_key));
+  hash_extend(&ctx, peers_static_public_key, PUBLIC_KEY_SIZE);
+  hash_extend(&ctx, sm_public_key, sizeof(sm_public_key));
+  hash_finalize(de, &ctx);
+
+  if (!uECC_shared_fhmqv_secret(sm_private_key,
+                                our_ephemeral_private_key,
+                                peers_static_public_key,
+                                peers_ephemeral_public_key,
+                                de + (sizeof(de) / 2),
+                                de,
+                                sigma,
+                                uECC_CURVE())) {
+    return -1;
+  }
+  sbi_memcpy(ikm, peers_static_public_key, PUBLIC_KEY_SIZE);
+  sbi_memcpy(ikm + PUBLIC_KEY_SIZE,
+             sm_public_key,
+             sizeof(sm_public_key));
+  sbi_memcpy(ikm + PUBLIC_KEY_SIZE + sizeof(sm_public_key),
+             peers_ephemeral_public_key,
+             sizeof(peers_ephemeral_public_key));
+  sbi_memcpy(ikm + PUBLIC_KEY_SIZE
+             + sizeof(sm_public_key)
+             + sizeof(peers_ephemeral_public_key),
+             our_ephemeral_public_key,
+             sizeof(our_ephemeral_public_key));
+  kdf(NULL, 0, /* TODO use salt */
+      sigma, sizeof(sigma),
+      ikm, sizeof(ikm),
+      okm, sizeof(okm));
+  sbi_memcpy(enclave_report->fhmqv_key,
+             okm + sizeof(okm) / 2,
+             sizeof(okm) / 2);
+  sha_256_hmac_init(&hmac_ctx, okm, sizeof(okm) / 2);
+  sha_256_hmac_update(&hmac_ctx,
+                      sm_public_key,
+                      sizeof(sm_public_key));
+  sha_256_hmac_update(&hmac_ctx,
+                      our_ephemeral_public_key,
+                      sizeof(our_ephemeral_public_key));
+  sha_256_hmac_update(&hmac_ctx,
+                      enclave_report->hash,
+                      sizeof(enclave_report->hash));
+  sha_256_hmac_finish(&hmac_ctx, enclave_report->servers_fhmqv_mic);
+  sha_256_hmac_init(&hmac_ctx, okm, sizeof(okm) / 2);
+  sha_256_hmac_update(&hmac_ctx, peers_static_public_key, PUBLIC_KEY_SIZE);
+  sha_256_hmac_update(&hmac_ctx,
+                      peers_ephemeral_public_key,
+                      sizeof(peers_ephemeral_public_key));
+  sha_256_hmac_finish(&hmac_ctx, enclave_report->clients_fhmqv_mic);
+  return 0;
+}
+#endif /* WITH_TRAP */
+
 int sm_sign(void* signature, byte digest[MDSIZE])
 {
   if (!uECC_sign(sm_private_key, digest, MDSIZE, signature, uECC_CURVE())) {

@@ -637,6 +637,13 @@ unsigned long attest_enclave(uintptr_t report_ptr, uintptr_t data, uintptr_t siz
   sbi_memcpy(report.sm.signature, sm_signature, SIGNATURE_SIZE);
   sbi_memcpy(report.enclave.hash, enclaves[eid].hash, MDSIZE);
 
+#if WITH_TRAP
+  if (!report.enclave.data_len) {
+    /* this is for printing hashes at start up */
+  } else if (sm_fhmqv(&report.enclave)) {
+    return SBI_ERR_SM_ENCLAVE_UNKNOWN_ERROR;
+  }
+#else /* WITH_TRAP */
   {
     byte digest[MDSIZE];
     hash_ctx ctx;
@@ -648,6 +655,7 @@ unsigned long attest_enclave(uintptr_t report_ptr, uintptr_t data, uintptr_t siz
       return SBI_ERR_SM_ENCLAVE_UNKNOWN_ERROR;
     }
   }
+#endif /* WITH_TRAP */
 
   spin_lock(&encl_lock);
 

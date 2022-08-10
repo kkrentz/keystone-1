@@ -83,7 +83,14 @@ struct enclave_report
   byte hash[MDSIZE];
   uint64_t data_len;
   byte data[ATTEST_DATA_MAXLEN];
+#if WITH_TRAP
+  byte ephemeral_public_key_compressed[PUBLIC_KEY_COMPRESSED_SIZE];
+  byte fhmqv_key[MDSIZE];
+  byte servers_fhmqv_mic[MDSIZE];
+  byte clients_fhmqv_mic[MDSIZE];
+#else /* WITH_TRAP */
   byte signature[SIGNATURE_SIZE];
+#endif /* WITH_TRAP */
 };
 struct sm_report
 {

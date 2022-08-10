@@ -11,6 +11,7 @@
 #include "sm-sbi.h"
 #include <sbi/riscv_encoding.h>
 
+#include "attestation.h"
 #include "sm_call.h"
 #include "sm_err.h"
 
@@ -19,6 +20,10 @@ void sm_init(bool cold_boot);
 /* platform specific functions */
 #define ATTESTATION_KEY_LENGTH  64
 void sm_retrieve_pubkey(void* dest);
+#if WITH_TRAP
+struct enclave_report;
+int sm_fhmqv(struct enclave_report *enclave_report);
+#endif /* WITH_TRAP */
 int sm_sign(void* signature, byte digest[MDSIZE]);
 int sm_derive_sealing_key(unsigned char *key,
                           const unsigned char *key_ident,
