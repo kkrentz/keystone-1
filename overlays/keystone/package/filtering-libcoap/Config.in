@@ -1,0 +1,4 @@
+config BR2_PACKAGE_FILTERING_LIBCOAP
+        bool "Filtering libcoap"
+        help
+          A version of libcoap tailored to the filtering-proxy

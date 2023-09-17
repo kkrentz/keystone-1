@@ -1,0 +1,6 @@
+config BR2_PACKAGE_FILTERING_PROXY
+        bool "Filtering Proxy"
+        depends on BR2_PACKAGE_HOST_KEYSTONE_SDK
+        depends on BR2_PACKAGE_KEYSTONE_RUNTIME
+        help
+          Privacy-preserving en-route filtering of OSCORE-NG traffic
